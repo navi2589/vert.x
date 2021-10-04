@@ -181,6 +181,32 @@ public class ClusteredEventBusTest extends ClusteredEventBusTestBase {
     await();
   }
 
+  @Test
+  public void testCodecInheritance1() {
+    startNodes(2);
+    MessageCodec codec = new FruitCodec();
+    vertices[0].eventBus().registerDefaultCodec(Fruit.class, codec);
+    vertices[1].eventBus().registerDefaultCodec(Fruit.class, codec);
+    String color = TestUtils.randomAlphaString(100);
+    testSend(new Fruit(color), null, msg -> {
+      assertEquals(color, msg.color);
+    }, null);
+  }
+
+  @Test
+  public void testCodecInheritance2() {
+    startNodes(2);
+    MessageCodec codec = new FruitCodec();
+    vertices[0].eventBus().registerDefaultCodec(Fruit.class, codec);
+    vertices[1].eventBus().registerDefaultCodec(Fruit.class, codec);
+    String color = TestUtils.randomAlphaString(100);
+    String kind = TestUtils.randomAlphaString(100);
+    testSend(new Apple(color, kind), null, msg -> {
+      assertEquals(color, msg.color);
+      assertEquals(kind, msg.kind);
+    }, null);
+  }
+
   // Make sure ping/pong works ok
   @Test
   public void testClusteredPong() throws Exception {

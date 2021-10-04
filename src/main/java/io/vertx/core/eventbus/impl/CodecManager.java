@@ -62,43 +62,59 @@ public class CodecManager {
       if (codec == null) {
         throw new IllegalArgumentException("No message codec for name: " + codecName);
       }
-    } else if (body == null) {
-      codec = NULL_MESSAGE_CODEC;
-    } else if (body instanceof String) {
+    } else {
+      if (body == null) {
+        codec = NULL_MESSAGE_CODEC;
+      } else {
+        codec = resolveCodec(body.getClass());
+        if (codec == null) {
+          throw new IllegalArgumentException("No message codec for type: " + body.getClass());
+        }
+      }
+    }
+    return codec;
+  }
+
+  private MessageCodec resolveCodec(Class<?> clazz) {
+    MessageCodec codec;
+    if (clazz == String.class) {
       codec = STRING_MESSAGE_CODEC;
-    } else if (body instanceof Buffer) {
+    } else if (Buffer.class.isAssignableFrom(clazz)) {
       codec = BUFFER_MESSAGE_CODEC;
-    } else if (body instanceof JsonObject) {
+    } else if (clazz == JsonObject.class) {
       codec = JSON_OBJECT_MESSAGE_CODEC;
-    } else if (body instanceof JsonArray) {
+    } else if (clazz == JsonArray.class) {
       codec = JSON_ARRAY_MESSAGE_CODEC;
-    } else if (body instanceof byte[]) {
+    } else if (clazz == byte[].class) {
       codec = BYTE_ARRAY_MESSAGE_CODEC;
-    } else if (body instanceof Integer) {
+    } else if (clazz == Integer.class) {
       codec = INT_MESSAGE_CODEC;
-    } else if (body instanceof Long) {
+    } else if (clazz == Long.class) {
       codec = LONG_MESSAGE_CODEC;
-    } else if (body instanceof Float) {
+    } else if (clazz == Float.class) {
       codec = FLOAT_MESSAGE_CODEC;
-    } else if (body instanceof Double) {
+    } else if (clazz == Double.class) {
       codec = DOUBLE_MESSAGE_CODEC;
-    } else if (body instanceof Boolean) {
+    } else if (clazz == Boolean.class) {
       codec = BOOLEAN_MESSAGE_CODEC;
-    } else if (body instanceof Short) {
+    } else if (clazz == Short.class) {
       codec = SHORT_MESSAGE_CODEC;
-    } else if (body instanceof Character) {
+    } else if (clazz == Character.class) {
       codec = CHAR_MESSAGE_CODEC;
-    } else if (body instanceof Byte) {
+    } else if (clazz == Byte.class) {
       codec = BYTE_MESSAGE_CODEC;
-    } else if (body instanceof ReplyException) {
-      codec = defaultCodecMap.get(body.getClass());
+    } else if (ReplyException.class.isAssignableFrom(clazz)) {
+      codec = defaultCodecMap.get(clazz);
       if (codec == null) {
         codec = REPLY_EXCEPTION_MESSAGE_CODEC;
       }
     } else {
-      codec = defaultCodecMap.get(body.getClass());
+      codec = defaultCodecMap.get(clazz);
       if (codec == null) {
-        throw new IllegalArgumentException("No message codec for type: " + body.getClass());
+        Class<?> parentClazz = clazz.getSuperclass();
+        if (parentClazz != Object.class) {
+          codec = resolveCodec(parentClazz);
+        }
       }
     }
     return codec;

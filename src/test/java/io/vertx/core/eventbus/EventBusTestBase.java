@@ -601,7 +601,6 @@ public abstract class EventBusTestBase extends VertxTestBase {
     }
   }
 
-
   public static class MyPOJO {
     private String str;
 
@@ -705,6 +704,65 @@ public abstract class EventBusTestBase extends VertxTestBase {
     @Override
     public String name() {
       return getClass().getName();
+    }
+
+    @Override
+    public byte systemCodecID() {
+      return -1;
+    }
+  }
+
+  public static class Fruit {
+    final String color;
+    public Fruit(String color) {
+      this.color = color;
+    }
+  }
+
+  public static class Apple extends Fruit {
+    final String kind;
+    public Apple(String color, String kind) {
+      super(color);
+      this.kind = kind;
+    }
+  }
+
+  public static class FruitCodec implements MessageCodec<Fruit, Fruit> {
+    @Override
+    public void encodeToWire(Buffer buffer, Fruit fruit) {
+      JsonObject json = new JsonObject().put("type", "Apple").put("color", fruit.color);
+      if (fruit instanceof Apple) {
+        Apple apple = (Apple) fruit;
+        json.put("kind", apple.kind);
+      }
+      Buffer payload = json.toBuffer();
+      buffer.appendInt(payload.length());
+      buffer.appendBuffer(payload);
+    }
+
+    @Override
+    public Fruit decodeFromWire(int pos, Buffer buffer) {
+      int len = buffer.getInt(pos);
+      JsonObject json = buffer.slice(pos + 4, pos + 4 + len).toJsonObject();
+      String color = json.getString("color");
+      Fruit fruit;
+      if ("Apple".equals(json.getString(("type")))) {
+        String kind = json.getString("kind");
+        fruit = new Apple(color, kind);
+      } else {
+        fruit = new Fruit(color);
+      }
+      return fruit;
+    }
+
+    @Override
+    public Fruit transform(Fruit fruit) {
+      return fruit;
+    }
+
+    @Override
+    public String name() {
+      return "fruit";
     }
 
     @Override

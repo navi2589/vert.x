@@ -888,6 +888,28 @@ public class LocalEventBusTest extends EventBusTestBase {
   }
 
   @Test
+  public void testCodecInheritance1() {
+    MessageCodec codec = new FruitCodec();
+    vertx.eventBus().registerDefaultCodec(Fruit.class, codec);
+    String color = TestUtils.randomAlphaString(100);
+    testSend(new Fruit(color), null, msg -> {
+      assertEquals(color, msg.color);
+    }, null);
+  }
+
+  @Test
+  public void testCodecInheritance2() {
+    MessageCodec codec = new FruitCodec();
+    vertx.eventBus().registerDefaultCodec(Fruit.class, codec);
+    String color = TestUtils.randomAlphaString(100);
+    String kind = TestUtils.randomAlphaString(100);
+    testSend(new Apple(color, kind), null, msg -> {
+      assertEquals(color, msg.color);
+      assertEquals(kind, msg.kind);
+    }, null);
+  }
+
+  @Test
   public void testNoRegisteredDefaultDecoder() throws Exception {
     assertIllegalArgumentException(() -> vertx.eventBus().send(ADDRESS1, new MyPOJO("foo")));
   }
